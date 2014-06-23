@@ -1,0 +1,42 @@
+<div id="contenido_ppal">
+	<h1>Volumenes disponibles para aplicar OCR</h1>
+	
+	<%if !@revistas_sin_ocr.empty? or !@revistas_en_progreso.empty? or !@revistas_con_ocr.empty?%>
+		<%form_for "revistas", :url=> {:controller=>"ocr", :action=>"procesar_ocr"} do |f|%>
+			<ul>
+				<%to_process = 0%>
+				<%@revistas_sin_ocr.each do |r|%>
+					<p>
+						<%arch = Dir.open("#{@ruta_revistas}/#{r}/jpg")%>
+						<%cant = arch.to_a.size - 2%>
+						<li style="<%if cant <= 0%>color:gray;font-style: italic;font-size:10pt<%else%>color:green<%end%>"><%if cant > 0%><%=check_box_tag("revistas[#{r}]", r)%><%to_process += 1%><%end%><%= r%> (<%=cant%> p&aacute;ginas)</li>
+					</p>
+				<%end%>
+				<%@revistas_en_progreso.each do |r,pr|%>
+					<p>
+						<%arch = Dir.open("#{@ruta_revistas}/#{r}/jpg")%>
+						<%cant = arch.to_a.size - 2%>
+						
+						<li style="<%if cant <= 0%>color:gray;font-style: italic;font-size:10pt<%elsif pr[:valid] and pr[:status] == "failed"%>color:red<%else%>color:blue<%end%>"><%if pr[:valid] and pr[:status] == 'failed'%><%=check_box_tag("revistas[#{r}]", r)%><%to_process += 1%><%end%><%= r%> <%if pr[:valid]%><%if pr[:status] == 'failed'%>Fallido<%else%>Procesando: <progress value="<%=pr[:percent]%>" max="100"><dd class="progressbar"><div class="bar" style="width:<%=pr[:percent]%>%;"></div></dd></progress><%end%><%else%>Estatus No Disponible<%end%></li>
+					</p>
+				<%end%>
+				<%@revistas_con_ocr.each do |r|%>
+					<p>
+						<li style="color:green"><%= r%> Completado</li>
+					</p>
+				<%end%>
+			</ul>
+			<br/><br/>
+			<%if to_process>0%>
+			<%=f.submit "Aplicar OCR"%>
+			<%end%>
+		<%end%>
+	<%else%>
+		<p>
+		<h3>No hay revistas disponibles para el Modulo OCR.</h3>
+		</p>
+	<%end%>
+	<p>S&oacute;lo se mostrar&aacute;n las revistas con estatus de OCR completado si estas se terminaron de procesar recientemente. Para conocer el tiempo m&aacute;ximo para listarse, debe acceder al m&oacute;dulo de configuraci&oacute;n.</p>
+	[<%=link_to "Volver", :controller=>"principal"%>]
+	[<%=link_to "Recargar", :controller=>"ocr"%>]
+</div>
